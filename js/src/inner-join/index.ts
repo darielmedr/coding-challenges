@@ -18,36 +18,23 @@ export type Detail = {
 export function innerJoin<M, N>({ leftArr, rightArr, key }: InnerJoin<M, N>): Array<M & N> {
 
   const leftArrByKey = mapByKey<M>(leftArr, key);
-  const rightArrByKey = mapByKey<N>(rightArr, key);
 
-  const lessElementsArr = Object.keys(leftArrByKey).length > Object.keys(rightArrByKey).length
-    ? rightArrByKey
-    : leftArrByKey;
-
-  const moreElementsArr = Object.keys(leftArrByKey).length > Object.keys(rightArrByKey).length
-    ? leftArrByKey
-    : rightArrByKey;
-
-  return Object.entries(lessElementsArr)
-    .filter(([ keyVal, _ ]) =>
-      !!moreElementsArr[keyVal])
-    .map(([ keyVal, value ]) => {
-       const complementValue = moreElementsArr[keyVal];
+  return rightArr
+    .filter((value) => leftArrByKey.has(value[key]))
+    .map((value) => {
+       const complementValue = leftArrByKey.get(value[key]) ?? {} as M;
 
        return { ...value, ...complementValue };
       }
     )
 }
 
-function mapByKey<T>(arr: Array<T>, key: keyof T): Record<string, T> {
-  const dictionary: Record<string, T> = {};
+
+function mapByKey<T>(arr: Array<T>, key: keyof T): Map<unknown, T> {
+  const dictionary: Map<unknown, T> = new Map();
 
   arr.forEach(value => {
-    const dictKey: unknown = value[key];
-
-    if (!dictionary[dictKey as string]) {
-      dictionary[dictKey as string] = value;
-    }
+      dictionary.set(value[key], value);
   });
 
   return dictionary;
